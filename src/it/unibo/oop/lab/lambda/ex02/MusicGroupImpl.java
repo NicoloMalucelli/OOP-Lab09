@@ -60,17 +60,17 @@ public final class MusicGroupImpl implements MusicGroup {
     @Override
     public int countSongsInNoAlbum() {
         return (int) songs.stream()
-                .filter(s -> s.getAlbumName().equals(null))
+                .filter(s -> s.getAlbumName().equals(Optional.empty()))
                 .count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
         return OptionalDouble.of(songs.stream()
-                                      .filter(s -> s.getAlbumName().get().equals(albumName))
+                                      .filter(s -> s.getAlbumName().orElse("").equals(albumName))
                                       .map(s -> s.getDuration())
                                       .reduce((t1, t2) -> t1 + t2)
-                                      .get() / this.countSongs(albumName));
+                                      .orElse(0.0) / this.countSongs(albumName));
     }
 
     @Override
@@ -85,9 +85,8 @@ public final class MusicGroupImpl implements MusicGroup {
         return songs.stream()
                     .collect(Collectors.groupingBy(Song::getAlbumName, Collectors.summingDouble(Song::getDuration)))
                     .entrySet().stream()
-                    .sorted((e1, e2) -> Double.compare(e1.getValue(), e2.getValue()))
-                    .map(e -> e.getKey())
-                    .findFirst().get();
+                    .max((e1, e2) -> Double.compare(e1.getValue(), e2.getValue()))
+                    .get().getKey();
     }
 
     private static final class Song {
